@@ -21,7 +21,7 @@ while read file sha; do
 			printf "File already exists, hash not matching! Skipping...\n"
 		fi
 	else
-		if wget -qO - "https://file-store.openmandriva.org/download/${sha}" > "${file}"; then
+		if wget -qO - "https://omv-files.houseof.software/download/${sha}" > "${file}"; then
 			printf "Download complete... "
 
 			if printf "${sha}  ${file}" | sha1sum -c --status; then
