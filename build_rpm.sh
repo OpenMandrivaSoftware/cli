@@ -2,6 +2,31 @@
 
 set -euo pipefail
 
+usage() {
+	cat <<EOF
+Usage: $0 [OPTIONS] [spec_file1.spec spec_file2.spec ...]
+
+Builds RPM packages from .spec files using rpmbuild in a bwrap sandbox.
+
+If no .spec files are provided, builds all *.spec files in the current directory.
+
+Options:
+  --action=VALUE        rpmbuild action (default: -bb)
+                        Examples: -bb (build binary), -bs (source RPM), -bp (prep)
+  --arch=VALUE          Target architecture (default: auto-detected)
+  --opts=VALUE          Additional rpmbuild options (e.g. "--with debug")
+  --help, -h            Show this help message
+
+Examples:
+  $0                          # Build all *.spec in current directory
+  $0 package.spec             # Build only package.spec
+  $0 car.spec vendor.spec     # Build multiple specific specs
+  $0 --action=-bs car.spec    # Build source RPM only
+  $0 --opts="--with debug"    # Pass custom rpmbuild flags
+EOF
+	exit 0
+}
+
 main() {
 	local action="-bb"
 	local arch
@@ -28,6 +53,9 @@ main() {
 			--opts=*)
 				opts="${1#*=}"
 				shift
+				;;
+			--help|-h)
+				usage
 				;;
 			*)
 				break
