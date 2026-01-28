@@ -37,7 +37,7 @@ main() {
 
 		mkdir -p "${PWD}/BUILD"
 
-		local logname="${project}_${action}_$(date -u +"%Y-%m-%dT%H:%M:%SZ").log"
+		local logname="${project}_${action//-/}_$(date -u +"%Y-%m-%dT%H:%M:%SZ").log"
 
 		run_in_bwrap rpmbuild "$action" \
 			--target "$arch" \
