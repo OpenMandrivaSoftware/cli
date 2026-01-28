@@ -19,27 +19,53 @@ main() {
 		case "$1" in
 			--action=*)
 				action="${1#*=}"
+				shift
 				;;
 			--arch=*)
 				arch="${1#*=}"
+				shift
 				;;
 			--opts=*)
 				opts="${1#*=}"
+				shift
+				;;
+			*)
+				break
 				;;
 		esac
-		shift
 	done
 
 	printf "Target architecture: '%s'\n" "$arch"
 
-	local spec
-	for spec in *.spec; do
-		local project=${spec%.*}
-		printf "Project: '%s'\n" "$project"
+	local specs=()
+
+	if [ $# -gt 0 ]; then
+		specs=("$@")
+	else
+		specs=(*.spec)
+		if [ ${#specs[@]} -eq 0 ] || [ "${specs[0]}" = "*.spec" ]; then
+			echo "Error: No .spec files found in current directory and no files specified."
+			exit 1
+		fi
+	fi
+
+	local status=0
+
+	for spec in "${specs[@]}"; do
+		if [ ! -f "$spec" ]; then
+			echo "Warning: File not found, skipping: $spec"
+			continue
+		fi
+
+		local project="${spec%.*}"
+		printf "\nProject: '%s'\n" "$project"
 
 		mkdir -p "${PWD}/BUILD"
 
 		local logname="${project}_${action//-/}_$(date -u +"%Y-%m-%dT%H:%M:%SZ").log"
+
+		echo "Running: rpmbuild $action --target $arch --define \"_topdir ${PWD}\" --define \"_sourcedir ${PWD}\" $spec $opts"
+		echo "Log: $logname"
 
 		run_in_bwrap rpmbuild "$action" \
 			--target "$arch" \
@@ -48,13 +74,14 @@ main() {
 			"$spec" $opts \
 			2>&1 | tee "$logname"
 
-		local status=${PIPESTATUS[0]}
+		local cmd_status=${PIPESTATUS[0]}
 
-		printf "Build log is saved to '%s'.\n" "$logname"
+		printf "Build log saved to '%s'.\n" "$logname"
 
-		if [ "$status" -ne 0 ]; then
-			printf "Build failure!\n"
-			break
+		if [ "$cmd_status" -ne 0 ]; then
+			printf "Build failure for %s!\n" "$project"
+			status=1
+			# break # Uncomment to stop on first error
 		fi
 	done
 
