@@ -129,6 +129,7 @@ run_in_bwrap() {
 		--ro-bind /usr /usr \
 		--ro-bind /lib /lib \
 		--ro-bind /lib64 /lib64 \
+		--ro-bind /etc/rpm /etc/rpm \
 		--ro-bind /var/lib/rpm /var/lib/rpm \
 		--dev /dev \
 		--proc /proc \
